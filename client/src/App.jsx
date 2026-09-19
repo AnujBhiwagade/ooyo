@@ -31,8 +31,10 @@ function App() {
   const [notification, setNotification] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(
-    window.location.hash || "",
-  );
+  window.location.hash ||
+    window.location.pathname ||
+    "",
+);
 
   console.log(
     "APP RENDER DECISION → hasJoined:",
@@ -49,8 +51,12 @@ function App() {
 
   useEffect(() => {
     const handleHashChange = () => {
-      setCurrentPage(window.location.hash || "");
-    };
+  setCurrentPage(
+    window.location.hash ||
+      window.location.pathname ||
+      "",
+  );
+};
 
     window.addEventListener("hashchange", handleHashChange);
 
@@ -319,7 +325,8 @@ function App() {
         return <ContactPage />;
 
       case "#/omegle-alternative":
-        return <OmegleAlternativePage />;
+      case "/omegle-alternative":
+      return <OmegleAlternativePage />;
 
       default:
         return null;

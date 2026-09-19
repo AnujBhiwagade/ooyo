@@ -1,12 +1,6 @@
 function OmegleAlternativePage() {
   const enterOoyo = () => {
-    window.history.replaceState(
-      null,
-      "",
-      window.location.pathname + window.location.search,
-    );
-
-    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    window.location.href = "/";
   };
 
   return (
