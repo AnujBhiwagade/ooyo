@@ -13,6 +13,7 @@ import PrivacyPage from "./components/website/PrivacyPage";
 import TermsPage from "./components/website/TermsPage";
 import ContactPage from "./components/website/ContactPage";
 import LegalPage from "./components/website/LegalPage";
+import OmegleAlternativePage from "./components/website/OmegleAlternativePage";
 
 import Notification from "./components/notifications/Notification";
 
@@ -316,6 +317,9 @@ function App() {
 
       case "#/contact":
         return <ContactPage />;
+
+      case "#/omegle-alternative":
+        return <OmegleAlternativePage />;
 
       default:
         return null;

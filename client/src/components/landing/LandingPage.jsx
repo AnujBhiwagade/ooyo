@@ -375,6 +375,20 @@ function LandingPage({ playerName, setPlayerName, onStart }) {
                 gives you a different way to meet people — four strangers, Truth
                 or Dare, and no profile to maintain.
               </p>
+
+              <button
+            onClick={() => goToPage("/omegle-alternative")}
+                 className="
+    mt-6
+    text-sm
+    text-white
+    font-semibold
+    hover:text-gray-400
+    transition
+  "
+                  >
+                   See how Ooyo is different →
+               </button>
             </div>
           </div>
         </section>
