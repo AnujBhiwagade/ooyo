@@ -18,8 +18,8 @@ function LandingPage({ playerName, setPlayerName, onStart }) {
   }, []);
 
   const goToPage = (page) => {
-    window.location.hash = page;
-  };
+  window.location.href = page;
+};
 
   useEffect(() => {
     const existingSchema = document.getElementById("ooyo-structured-data");
