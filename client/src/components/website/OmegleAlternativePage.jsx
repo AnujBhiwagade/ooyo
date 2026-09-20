@@ -1,4 +1,137 @@
+import { useEffect } from "react";
+
 function OmegleAlternativePage() {
+ useEffect(() => {
+  document.title =
+    "Omegle Alternative — Random Video Chat | Ooyo";
+
+  const description =
+    "Looking for an Omegle alternative? Ooyo is a random video chat where you meet strangers, play Truth or Dare, and chat without an account.";
+
+  const createdElements = [];
+
+  let meta = document.querySelector(
+    'meta[name="description"]',
+  );
+
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "description";
+    document.head.appendChild(meta);
+    createdElements.push(meta);
+  }
+
+  meta.setAttribute("content", description);
+
+  let canonical = document.querySelector(
+    'link[rel="canonical"]',
+  );
+
+  if (!canonical) {
+    canonical = document.createElement("link");
+    canonical.setAttribute("rel", "canonical");
+    document.head.appendChild(canonical);
+    createdElements.push(canonical);
+  }
+
+  canonical.setAttribute(
+    "href",
+    "https://ooyo.in/omegle-alternative",
+  );
+
+  const ogTags = {
+    "og:type": "website",
+    "og:url": "https://ooyo.in/omegle-alternative",
+    "og:title":
+      "Omegle Alternative — Random Video Chat | Ooyo",
+    "og:description":
+      "Looking for an Omegle alternative? Meet strangers on Ooyo through random video chat, Truth or Dare, and no account required.",
+    "og:image": "https://ooyo.in/logo.png",
+  };
+
+  Object.entries(ogTags).forEach(([property, content]) => {
+    let tag = document.querySelector(
+      `meta[property="${property}"]`,
+    );
+
+    if (!tag) {
+      tag = document.createElement("meta");
+      tag.setAttribute("property", property);
+      document.head.appendChild(tag);
+      createdElements.push(tag);
+    }
+
+    tag.setAttribute("content", content);
+  });
+
+  const twitterTags = {
+    "twitter:card": "summary",
+    "twitter:title":
+      "Omegle Alternative — Random Video Chat | Ooyo",
+    "twitter:description":
+      "Meet strangers through random video chat, Truth or Dare, and no account required.",
+    "twitter:image": "https://ooyo.in/logo.png",
+  };
+
+  Object.entries(twitterTags).forEach(([name, content]) => {
+    let tag = document.querySelector(
+      `meta[name="${name}"]`,
+    );
+
+    if (!tag) {
+      tag = document.createElement("meta");
+      tag.setAttribute("name", name);
+      document.head.appendChild(tag);
+      createdElements.push(tag);
+    }
+
+    tag.setAttribute("content", content);
+  });
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id":
+          "https://ooyo.in/omegle-alternative#webpage",
+        url: "https://ooyo.in/omegle-alternative",
+        name:
+          "Omegle Alternative — Random Video Chat | Ooyo",
+        description,
+        isPartOf: {
+          "@id": "https://ooyo.in/#website",
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://ooyo.in/#website",
+        url: "https://ooyo.in/",
+        name: "Ooyo",
+      },
+    ],
+  };
+
+  let schema = document.querySelector(
+    'script[type="application/ld+json"]',
+  );
+
+  if (!schema) {
+    schema = document.createElement("script");
+    schema.type = "application/ld+json";
+    document.head.appendChild(schema);
+    createdElements.push(schema);
+  }
+
+  schema.textContent = JSON.stringify(structuredData);
+
+  return () => {
+    createdElements.forEach((element) => {
+      element.remove();
+    });
+  };
+}, []);
+
   const enterOoyo = () => {
     window.location.href = "/";
   };
