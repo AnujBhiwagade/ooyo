@@ -28,24 +28,13 @@ function PlayerTile({
   // ============================
   // SELECTED PLAYER GLOW
   // ============================
-  //
-  // Glow starts at countdown 1.
-  //
-  // It stays ON through:
-  //
-  // 1 → 0 → choice
-  //
-  // No timer.
-  // No setState.
-  // Server countdown controls it.
-  // ============================
 
   const showSelected =
-  selected &&
-  (
-    gameState?.countdown === 0 ||
-    gameState?.phase === "choice"
-  );
+    selected &&
+    (
+      gameState?.countdown === 0 ||
+      gameState?.phase === "choice"
+    );
 
   return (
     <div
@@ -57,7 +46,7 @@ function PlayerTile({
         shadow-xl
         transition
         duration-300
-        hover:scale-[1.02]
+        md:hover:scale-[1.02]
         bg-gray-800
       "
     >
@@ -114,10 +103,20 @@ function PlayerTile({
       {/* PLAYER NAME */}
       {/* ============================ */}
 
-      <div className="absolute top-3 left-3 z-30">
+      <div
+        className="
+          absolute
+          top-2
+          left-2
+          md:top-3
+          md:left-3
+          z-30
+        "
+      >
         <div
           className="
-            text-sm
+            text-xs
+            md:text-sm
             font-semibold
             tracking-wide
             text-white
@@ -137,8 +136,10 @@ function PlayerTile({
           <div
             className="
               absolute
-              top-3
-              right-3
+              top-2
+              right-2
+              md:top-3
+              md:right-3
               w-4
               h-4
               rounded-full

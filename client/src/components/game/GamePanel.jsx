@@ -18,22 +18,26 @@ function GamePanel({
   const voteSubmitted = currentPlayer?.voted ?? false;
 
   /*
-   * Every game phase uses this same stage.
+   * Main centered stage used by every game phase.
+   *
+   * flex-1 + min-h-0 gives the stage the complete
+   * available height inside the GamePanel.
    */
   const centerStage = `
-    h-full
+    flex-1
+    min-h-0
     w-full
     flex
     flex-col
     items-center
     justify-center
     text-center
-    px-4
+    px-3
+    md:px-4
   `;
 
   /*
-   * Result can come from the server in different forms.
-   * Normalize it so the UI doesn't hardcode "won".
+   * Result normalization.
    */
   const normalizedResult = String(gameState?.result ?? "")
     .trim()
@@ -66,7 +70,8 @@ function GamePanel({
   return (
     <div
       className="
-        w-[320px]
+        w-full
+        md:w-[320px]
         border-l
         border-white/10
         bg-black/40
@@ -74,95 +79,107 @@ function GamePanel({
         flex
         flex-col
         min-h-0
+        h-full
       "
     >
+      {/* ========================= */}
       {/* GAME CONTENT */}
+      {/* ========================= */}
+
       <div
         className="
           flex-1
           min-h-0
-          p-2
+          p-1.5
+          md:p-2
           overflow-hidden
+          flex
+          flex-col
         "
       >
+
         {/* ========================= */}
         {/* WAITING */}
         {/* ========================= */}
 
-        {(!gameState || gameState?.phase === "waiting") && (
-          <div className="h-full w-full flex flex-col">
-            {/* ROOM STATUS HEADER */}
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                text-xs
-                shrink-0
-                px-2
-                py-1
-              "
-            >
-              <span className="text-gray-400">
-                Room Status
-              </span>
+{(!gameState || gameState?.phase === "waiting") && (
+  <div className="h-full w-full flex flex-col">
 
-              <span className="text-green-400">
-                {(roomData?.players?.length ?? 0) < 4
-                  ? "WAITING"
-                  : "GET READY"}
-              </span>
-            </div>
+    {/* STATUS ROW */}
+    <div
+      className="
+        w-full
+        shrink-0
+        flex
+        items-center
+        justify-between
+        px-2
+        py-1
+        text-xs
+      "
+    >
+      <span className="text-gray-400">
+        Room Status
+      </span>
 
-            {/* WAITING CONTENT */}
-            <div
-              className="
-                flex-1
-                min-h-0
-                flex
-                flex-col
-                items-center
-                justify-center
-                text-center
-                px-4
-              "
-            >
-              {(roomData?.players?.length ?? 0) < 4 ? (
-                <>
-                  <div className="text-5xl font-bold text-white">
-                    {roomData?.players?.length ?? 0}
-                    <span className="text-gray-600">
-                      {" "}
-                      / 4
-                    </span>
-                  </div>
+      <span className="text-green-400">
+        {(roomData?.players?.length ?? 0) < 4
+          ? "WAITING"
+          : "GET READY"}
+      </span>
+    </div>
 
-                  <div className="mt-3 text-sm text-gray-400">
-                    Waiting for players...
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-5xl font-bold text-white">
-                    4
-                    <span className="text-gray-600">
-                      {" "}
-                      / 4
-                    </span>
-                  </div>
-
-                  <p className="mt-3 text-sm text-green-400">
-                    Everyone joined 🎉
-                  </p>
-
-                  <p className="mt-1 text-xs text-gray-500">
-                    Get ready for the next round
-                  </p>
-                </>
-              )}
-            </div>
+    {/* CENTERED GAME CONTENT */}
+    <div
+      className="
+        flex-1
+        min-h-0
+        w-full
+        flex
+        flex-col
+        items-center
+        justify-center
+        text-center
+        px-3
+        md:px-4
+      "
+    >
+      {(roomData?.players?.length ?? 0) < 4 ? (
+        <>
+          <div className="text-4xl md:text-5xl font-bold text-white">
+            {roomData?.players?.length ?? 0}
+            <span className="text-gray-600">
+              {" "}
+              / 4
+            </span>
           </div>
-        )}
+
+          <div className="mt-1 text-sm text-gray-400">
+            Waiting for players...
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-4xl md:text-5xl font-bold text-white">
+            4
+            <span className="text-gray-600">
+              {" "}
+              / 4
+            </span>
+          </div>
+
+          <p className="mt-1 text-sm text-green-400">
+            Everyone joined 🎉
+          </p>
+
+          <p className="mt-1 text-xs text-gray-500">
+            Get ready for the next round
+          </p>
+        </>
+      )}
+    </div>
+  </div>
+)}
 
         {/* ========================= */}
         {/* COUNTDOWN */}
@@ -170,13 +187,14 @@ function GamePanel({
 
         {gameState?.phase === "countdown" && (
           <div className={centerStage}>
-            <p className="text-[11px] tracking-[0.2em] uppercase text-gray-500">
+            <p className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-gray-500">
               ROUND STARTING
             </p>
 
             <h1
               className="
-                text-7xl
+                text-6xl
+                md:text-7xl
                 font-bold
                 text-white
                 mt-3
@@ -196,73 +214,65 @@ function GamePanel({
           <div className={centerStage}>
             {socket.id === gameState?.selectedPlayer?.id ? (
               <>
-                <p className="text-[11px] tracking-[0.2em] text-purple-300">
+                <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-purple-300">
                   YOUR TURN
                 </p>
 
-                <h2 className="text-lg font-bold text-white mt-3">
+                <h2 className="text-lg font-bold text-white mt-2 md:mt-3">
                   Truth or Dare?
                 </h2>
 
-                <div className="flex gap-3 mt-6 w-full max-w-[280px]">
+                <div className="flex gap-2 md:gap-3 mt-5 md:mt-6 w-full max-w-[280px]">
                   <button
                     onClick={() => {
-                      console.log(gameState);
-
                       socket.emit("choose-mode", {
                         roomId: gameState?.roomId,
                         mode: "truth",
                       });
                     }}
                     className="
-                      flex-1
-                      py-2.5
-                      rounded-xl
-                      bg-gradient-to-b
-                      from-gray-200
-                      to-gray-400
-                      border
-                      border-gray-300
-                      text-gray-900
-                      font-semibold
-                      shadow-md
-                      hover:from-gray-100
-                      hover:to-gray-300
-                      active:scale-[0.98]
-                      transition-all
-                      duration-200
-                    "
+  flex-1
+  py-3
+  md:py-2.5
+  rounded-xl
+  bg-white
+  border
+  border-gray-300
+  text-gray-900
+  font-semibold
+  shadow-md
+  hover:bg-gray-100
+  active:scale-[0.98]
+  transition-all
+  duration-200
+"
                   >
                     Truth
                   </button>
 
                   <button
                     onClick={() => {
-                      console.log(gameState);
-
                       socket.emit("choose-mode", {
                         roomId: gameState?.roomId,
                         mode: "dare",
                       });
                     }}
                     className="
-                      flex-1
-                      py-2.5
-                      rounded-xl
-                      bg-gradient-to-b
-                      from-[#f2c4b5]
-                      to-[#c9826f]
-                      border
-                      border-[#e2a08d]
-                      text-gray-900
-                      font-semibold
-                      shadow-md
-                      hover:from-[#f6d0c4]
-                      hover:to-[#d99380]
-                      active:scale-[0.98]
-                      transition-all
-                      duration-200
-                    "
+  flex-1
+  py-3
+  md:py-2.5
+  rounded-xl
+  bg-[#4C1D95]
+  border
+  border-purple-500
+  text-white
+  font-semibold
+  shadow-md
+  hover:bg-purple-600
+  active:scale-[0.98]
+  transition-all
+  duration-200
+"
                   >
                     Dare
                   </button>
@@ -270,11 +280,11 @@ function GamePanel({
               </>
             ) : (
               <>
-                <div className="text-[11px] tracking-[0.2em] text-gray-500">
+                <div className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-500">
                   SELECTED PLAYER
                 </div>
 
-                <p className="text-lg font-semibold text-white mt-3">
+                <p className="text-lg font-semibold text-white mt-2 md:mt-3">
                   {gameState?.selectedPlayer?.name}
                 </p>
 
@@ -294,11 +304,11 @@ function GamePanel({
           <div className={centerStage}>
             {socket.id === gameState?.selectedPlayer?.id ? (
               <>
-                <p className="text-[11px] tracking-[0.2em] text-purple-300">
+                <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-purple-300">
                   CHALLENGE SETUP
                 </p>
 
-                <h2 className="text-4xl font-bold text-white mt-3">
+                <h2 className="text-3xl md:text-4xl font-bold text-white mt-2">
                   {gameState?.submittedTasks?.length || 0}
                   <span className="text-gray-600">
                     {" "}
@@ -306,11 +316,11 @@ function GamePanel({
                   </span>
                 </h2>
 
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-gray-400 mt-1">
                   questions submitted
                 </p>
 
-                <p className="text-xs text-gray-500 mt-4">
+                <p className="text-xs text-gray-500 mt-3">
                   Waiting for the others...
                 </p>
               </>
@@ -339,12 +349,21 @@ function GamePanel({
                 </p>
               </div>
             ) : (
-              <div className="w-full max-w-[280px]">
-                <p className="text-[11px] tracking-[0.2em] text-purple-300">
+              <div
+                className="
+                  w-full
+                  max-w-[280px]
+                  flex
+                  flex-col
+                  items-center
+                  justify-center
+                "
+              >
+                <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-purple-300">
                   YOUR TURN
                 </p>
 
-                <p className="text-sm text-gray-400 mt-3">
+                <p className="text-sm text-gray-400 mt-2 md:mt-3">
                   {gameState?.mode === "truth"
                     ? "Write a question for"
                     : "Write a dare for"}
@@ -356,7 +375,9 @@ function GamePanel({
 
                 <textarea
                   value={taskInput}
-                  onChange={(e) => setTaskInput(e.target.value)}
+                  onChange={(e) =>
+                    setTaskInput(e.target.value)
+                  }
                   placeholder={
                     gameState?.mode === "truth"
                       ? "Write a fun question..."
@@ -365,7 +386,8 @@ function GamePanel({
                   className="
                     w-full
                     h-20
-                    mt-5
+                    mt-4
+                    md:mt-5
                     rounded-xl
                     bg-gray-900
                     border
@@ -395,7 +417,8 @@ function GamePanel({
                   }}
                   className="
                     w-full
-                    py-2.5
+                    py-3
+                    md:py-2.5
                     mt-3
                     rounded-xl
                     bg-[#4C1D95]
@@ -424,7 +447,7 @@ function GamePanel({
           <div className={centerStage}>
             {socket.id === gameState?.selectedPlayer?.id ? (
               <div className="w-full max-w-[280px]">
-                <p className="text-[11px] tracking-[0.2em] text-purple-300">
+                <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-purple-300">
                   CHOOSE A CHALLENGE
                 </p>
 
@@ -432,7 +455,7 @@ function GamePanel({
                   Pick one question from the players
                 </p>
 
-                <div className="mt-5 space-y-2">
+                <div className="mt-4 md:mt-5 space-y-2 max-h-[150px] overflow-y-auto scrollbar-hide">
                   {gameState?.players
                     ?.filter(
                       (player) =>
@@ -450,7 +473,8 @@ function GamePanel({
                         className="
                           w-full
                           px-3
-                          py-2
+                          py-2.5
+                          md:py-2
                           rounded-lg
                           bg-white/[0.03]
                           border
@@ -470,7 +494,7 @@ function GamePanel({
               </div>
             ) : (
               <>
-                <div className="text-[11px] tracking-[0.2em] text-gray-500">
+                <div className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-500">
                   WAITING
                 </div>
 
@@ -488,29 +512,31 @@ function GamePanel({
 
         {gameState?.phase === "task-active" && (
           <div className={centerStage}>
-            <p className="text-[11px] tracking-[0.2em] text-gray-400">
+            <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-400">
               CURRENT CHALLENGE
             </p>
 
             <div
-              className="
-                w-full
-                max-w-[280px]
-                mt-4
-                px-4
-                py-4
-                rounded-xl
-                bg-purple-500/10
-                border
-                border-purple-500/20
-              "
-            >
-              <p className="text-sm text-white leading-relaxed">
-                {gameState?.chosenTask}
-              </p>
-            </div>
+  className="
+    w-full
+    max-w-[280px]
+    mt-3
+    md:mt-4
+    px-4
+    py-4
+    rounded-xl
+    bg-gray-100
+    border
+    border-gray-300
+    shadow-sm
+  "
+>
+  <p className="text-sm text-gray-900 leading-relaxed font-medium">
+    {gameState?.chosenTask}
+  </p>
+</div>
 
-            <div className="text-yellow-400 font-semibold text-xl mt-5">
+            <div className="text-yellow-400 font-semibold text-xl mt-4 md:mt-5">
               {gameState?.timer}s
             </div>
           </div>
@@ -524,7 +550,7 @@ function GamePanel({
           <div className={centerStage}>
             {socket.id === gameState?.selectedPlayer?.id ? (
               <>
-                <div className="text-[11px] tracking-[0.2em] text-gray-500">
+                <div className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-500">
                   VOTING
                 </div>
 
@@ -534,7 +560,7 @@ function GamePanel({
               </>
             ) : (
               <div className="w-full max-w-[280px]">
-                <p className="text-[11px] tracking-[0.2em] text-gray-400 mb-5">
+                <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-400 mb-4 md:mb-5">
                   CHALLENGE COMPLETE?
                 </p>
 
@@ -549,7 +575,8 @@ function GamePanel({
                     disabled={voteSubmitted}
                     className={`
                       w-full
-                      py-2.5
+                      py-3
+                      md:py-2.5
                       rounded-xl
                       border
                       font-semibold
@@ -579,7 +606,8 @@ function GamePanel({
                     disabled={voteSubmitted}
                     className={`
                       w-full
-                      py-2.5
+                      py-3
+                      md:py-2.5
                       rounded-xl
                       border
                       font-semibold
@@ -610,15 +638,17 @@ function GamePanel({
 
         {gameState?.phase === "result" && (
           <div className={centerStage}>
-            <p className="text-[11px] tracking-[0.2em] text-purple-300">
+            <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-purple-300">
               ROUND RESULT
             </p>
 
             <h2
               className={`
-                text-3xl
+                text-2xl
+                md:text-3xl
                 font-black
-                mt-4
+                mt-3
+                md:mt-4
                 ${
                   isLoss
                     ? "text-red-400"
@@ -631,7 +661,7 @@ function GamePanel({
               {resultTitle}
             </h2>
 
-            <p className="text-sm text-gray-400 mt-3">
+            <p className="text-sm text-gray-400 mt-2 md:mt-3">
               {resultMessage}
             </p>
           </div>

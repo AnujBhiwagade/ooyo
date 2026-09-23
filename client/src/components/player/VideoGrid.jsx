@@ -14,7 +14,7 @@ function VideoGrid({
   } = useWebRTC(roomData);
 
   return (
-    <div className="relative flex-1 p-4">
+    <div className="relative flex-1 p-2 md:p-4">
       {/* PLAYER TILES */}
       <div
         className="
@@ -23,7 +23,8 @@ function VideoGrid({
           grid
           grid-cols-2
           grid-rows-2
-          gap-3
+          gap-2
+          md:gap-3
           p-1
           h-full
         "

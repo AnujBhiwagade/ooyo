@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import socket from "../../socket/socket";
 
-function BottomControls({ roomData, gameState, playerCount }) {
+function BottomControls({
+  roomData,
+  gameState,
+  playerCount,
+  onChatClick,
+}) {
   const [showConcern, setShowConcern] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
@@ -163,7 +168,7 @@ function BottomControls({ roomData, gameState, playerCount }) {
 
       <div className="h-full flex items-center justify-between px-4 relative">
         {/* LEFT */}
-        <div className="flex items-center h-full">
+        <div className="hidden md:flex items-center h-full">
           <img
             src="/logo.png"
             alt="ooyo"
@@ -172,7 +177,18 @@ function BottomControls({ roomData, gameState, playerCount }) {
         </div>
 
         {/* CENTER */}
-        <div className="flex items-center gap-5 px-4 py-1.5">
+        <div
+  className="
+    flex
+    items-center
+    justify-center
+    gap-6
+    px-4
+    py-1.5
+    w-full
+    md:w-auto
+  "
+>
           {/* Move Room */}
           <button
             onClick={handleMoveRoom}
@@ -261,10 +277,37 @@ function BottomControls({ roomData, gameState, playerCount }) {
           >
             {isReady ? "I AM OUT" : "I AM IN"}
           </button>
+
+          {/* MOBILE CHAT */}
+<button
+  onClick={onChatClick}
+  title="Open chat"
+  className="
+    md:hidden
+    w-11
+    h-11
+    flex
+    items-center
+    justify-center
+    hover:scale-110
+    transition-all
+    duration-200
+  "
+>
+  <img
+    src="/chat-icon.png"
+    alt="Chat"
+    className="
+      w-14
+      h-14
+      object-contain
+    "
+  />
+</button>
         </div>
 
         {/* RIGHT */}
-        <div className="text-xs text-gray-400 whitespace-nowrap">
+        <div className="hidden md:block text-xs text-gray-400 whitespace-nowrap">
           Live Players: {playerCount ?? 0}
         </div>
       </div>
