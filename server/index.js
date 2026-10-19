@@ -1,4 +1,4 @@
-const { registerVideoHandlers } = require("./socket/videoHandlers");
+
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -17,12 +17,18 @@ const {
 } = require("./rooms/roomManager");
 
 const { broadcastGameState } = require("./socket/broadcaster");
-
 const { createGameState } = require("./game/gameState");
-
 const { registerGameHandlers } = require("./socket/gameHandlers");
-
 const { registerRoomHandlers } = require("./socket/roomHandlers");
+const { registerVideoHandlers } = require("./socket/videoHandlers");
+
+const {
+  registerRandomChatHandlers,
+} = require("./socket/randomChatHandlers");
+
+const {
+  registerRandomVideoHandlers,
+} = require("./socket/randomVideoHandlers");
 
 const app = express();
 
@@ -48,6 +54,13 @@ let connectedPlayers = 0;
 
 const rooms = {};
 
+// Random video chat has its own state, separate from game rooms.
+const randomChatState = {
+  queue: [],
+  partners: new Map(),
+  names: new Map(),
+};
+
 // ============================
 // SOCKET CONNECTION
 // ============================
@@ -60,8 +73,7 @@ io.on("connection", (socket) => {
   const playerIp =
     socket.handshake.headers["x-forwarded-for"]
       ?.split(",")[0]
-      .trim() ||
-    socket.handshake.address;
+      .trim() || socket.handshake.address;
 
   socket.playerIp = playerIp;
 
@@ -70,12 +82,9 @@ io.on("connection", (socket) => {
   // ============================
 
   if (isIpBanned(socket.playerIp)) {
-    const remainingBanTime =
-      getRemainingBanTime(socket.playerIp);
+    const remainingBanTime = getRemainingBanTime(socket.playerIp);
 
-    console.log(
-      `Banned IP rejected: ${socket.playerIp}`,
-    );
+    console.log(`Banned IP rejected: ${socket.playerIp}`);
 
     socket.emit("player-banned", {
       reason: "TEMPORARY_BAN",
@@ -83,7 +92,6 @@ io.on("connection", (socket) => {
     });
 
     socket.disconnect(true);
-
     return;
   }
 
@@ -91,8 +99,7 @@ io.on("connection", (socket) => {
   // MODERATION RECORD
   // ============================
 
-  const moderationRecord =
-    getIpRecord(socket.playerIp);
+  const moderationRecord = getIpRecord(socket.playerIp);
 
   socket.moderationRecord = moderationRecord;
 
@@ -102,95 +109,59 @@ io.on("connection", (socket) => {
 
   connectedPlayers++;
 
-  io.emit(
-    "player-count",
-    connectedPlayers,
-  );
+  io.emit("player-count", connectedPlayers);
 
   // ============================
-  // REGISTER SOCKET HANDLERS
+  // REGISTER EXISTING GAME HANDLERS
   // ============================
 
-  registerGameHandlers(
-    io,
-    socket,
-    rooms,
-  );
+  registerGameHandlers(io, socket, rooms);
+  registerRoomHandlers(io, socket, rooms);
 
-  registerRoomHandlers(
-    io,
-    socket,
-    rooms,
-  );
+  // Existing four-player video signaling.
+  registerVideoHandlers(io, socket);
 
-  registerVideoHandlers(
-    io,
-    socket,
-  );
+  // ============================
+  // RANDOM VIDEO CHAT HANDLERS
+  // ============================
+
+  // Both handlers MUST receive the same randomChatState object.
+  registerRandomChatHandlers(io, socket, randomChatState);
+  registerRandomVideoHandlers(io, socket, randomChatState);
 
   // ============================
   // DISCONNECT
   // ============================
 
   socket.on("disconnect", () => {
-    connectedPlayers--;
+    connectedPlayers = Math.max(0, connectedPlayers - 1);
 
-    io.emit(
-      "player-count",
-      connectedPlayers,
-    );
+    io.emit("player-count", connectedPlayers);
 
-    // ==========================================
-    // REMOVE PLAYER FROM THEIR ROOM
-    // ==========================================
-
+    // Remove player from their existing game room.
     for (const roomId in rooms) {
-      const room = getRoom(
-        rooms,
+      const room = getRoom(rooms, roomId);
+
+      if (!room) continue;
+
+      const playerExists = room.players.some(
+        (player) => player.id === socket.id,
+      );
+
+      if (!playerExists) continue;
+
+      removePlayer(rooms, roomId, socket.id);
+
+      io.to(roomId).emit("room-update", {
         roomId,
-      );
+        players: room.players,
+      });
 
-      if (!room) {
-        continue;
-      }
+      broadcastGameState(io, rooms, roomId);
 
-      const playerExists =
-        room.players.some(
-          (player) =>
-            player.id === socket.id,
-        );
-
-      if (!playerExists) {
-        continue;
-      }
-
-      removePlayer(
-        rooms,
-        roomId,
-        socket.id,
-      );
-
-      io.to(roomId).emit(
-        "room-update",
-        {
-          roomId,
-          players: room.players,
-        },
-      );
-
-      broadcastGameState(
-        io,
-        rooms,
-        roomId,
-      );
-
-      // ==========================================
-      // ROOM NO LONGER FULL
-      // ==========================================
-
+      // Room is no longer full.
       if (room.players.length < 4) {
         room.countdownStarted = false;
-
         room.game = createGameState();
 
         room.players.forEach((player) => {
@@ -201,20 +172,10 @@ io.on("connection", (socket) => {
         });
       }
 
-      broadcastGameState(
-        io,
-        rooms,
-        roomId,
-      );
+      broadcastGameState(io, rooms, roomId);
 
-      // ==========================================
-      // DELETE EMPTY ROOM
-      // ==========================================
-
-      deleteRoomIfEmpty(
-        rooms,
-        roomId,
-      );
+      // Delete empty room.
+      deleteRoomIfEmpty(rooms, roomId);
     }
   });
 });

@@ -1,7 +1,9 @@
+
 import { useEffect, useState } from "react";
 
 import MainLayout from "./components/layout/MainLayout";
 import LandingPage from "./components/landing/LandingPage";
+import RandomChatPage from "./components/randomChat/RandomChatPage";
 
 import WebsiteLayout from "./components/website/WebsiteLayout";
 import AboutPage from "./components/website/AboutPage";
@@ -16,7 +18,6 @@ import LegalPage from "./components/website/LegalPage";
 import OmegleAlternativePage from "./components/website/OmegleAlternativePage";
 
 import Notification from "./components/notifications/Notification";
-
 import socket from "./socket/socket";
 
 function App() {
@@ -27,36 +28,20 @@ function App() {
 
   const [playerName, setPlayerName] = useState("");
   const [hasJoined, setHasJoined] = useState(false);
+  const [randomChatActive, setRandomChatActive] = useState(false);
 
   const [notification, setNotification] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(
-  window.location.hash ||
-    window.location.pathname ||
-    "",
-);
-
-  console.log(
-    "APP RENDER DECISION → hasJoined:",
-    hasJoined,
-    "socket:",
-    socket.id,
-    "page:",
-    currentPage,
+    window.location.hash || window.location.pathname || "",
   );
-
-  /* ============================ */
-  /* PAGE NAVIGATION */
-  /* ============================ */
 
   useEffect(() => {
     const handleHashChange = () => {
-  setCurrentPage(
-    window.location.hash ||
-      window.location.pathname ||
-      "",
-  );
-};
+      setCurrentPage(
+        window.location.hash || window.location.pathname || "",
+      );
+    };
 
     window.addEventListener("hashchange", handleHashChange);
 
@@ -66,26 +51,24 @@ function App() {
   }, []);
 
   /* ============================ */
-  /* START GAME */
+  /* START TRUTH OR DARE */
   /* ============================ */
 
   const handleStart = () => {
-    if (!playerName.trim()) return;
+    const name = playerName.trim();
 
-    console.log(
-      "START CLICKED → joining as:",
-      playerName,
-      "socket:",
-      socket.id,
-    );
+    if (!name) {
+      setNotification({
+        type: "warning",
+        message: "Please enter your name first.",
+      });
+      return;
+    }
 
-    socket.emit("join-game", {
-      name: playerName,
-    });
-
+    socket.emit("join-game", { name });
     setHasJoined(true);
+    setRandomChatActive(false);
 
-    // Return to the normal game URL.
     if (window.location.hash) {
       window.history.replaceState(
         null,
@@ -98,70 +81,66 @@ function App() {
   };
 
   /* ============================ */
+  /* START RANDOM VIDEO CHAT */
+  /* ============================ */
+
+  const handleEnterRandomChat = () => {
+    const name = playerName.trim();
+
+    if (!name) {
+      setNotification({
+        type: "warning",
+        message: "Please enter your name first.",
+      });
+      return;
+    }
+
+    // Random chat has its own queue.
+    // Do not emit "join-game" here.
+    setRandomChatActive(true);
+  };
+
+  const handleLeaveRandomChat = () => {
+    setRandomChatActive(false);
+    setNotification(null);
+  };
+
+  /* ============================ */
   /* SOCKET EVENTS */
   /* ============================ */
 
   useEffect(() => {
-    socket.on("connect", () => {
+    const handleConnect = () => {
       console.log("Connected:", socket.id);
-    });
+    };
 
-    socket.on("player-count", (count) => {
+    const handlePlayerCount = (count) => {
       setPlayerCount(count);
-    });
+    };
 
-    socket.on("room-update", (data) => {
+    const handleRoomUpdate = (data) => {
       console.log("ROOM UPDATE", {
         roomId: data.roomId,
-        players: data.players.map((p) => p.name),
+        players: data.players.map((player) => player.name),
         mySocket: socket.id,
       });
 
-      console.log(
-        "CURRENT ROOM BEFORE UPDATE:",
-        roomData?.roomId,
-      );
-
       setRoomData(data);
-    });
+    };
 
-    socket.on("ready-update", (data) => {
-      console.log("READY UPDATE RECEIVED:", data);
-
+    const handleReadyUpdate = (data) => {
       setReadyData(data);
-    });
+    };
 
-    socket.on("round-reset", () => {
-      console.log("ROUND RESET");
-
+    const handleRoundReset = () => {
       setGameState(null);
-    });
+    };
 
-    socket.on("player-removed", (data) => {
-      console.log("🚨 PLAYER REMOVED:", data);
-
+    const returnHome = () => {
       setGameState(null);
       setRoomData(null);
       setReadyData(null);
       setHasJoined(false);
-
-      // Return to landing page.
-      window.history.replaceState(
-        null,
-        "",
-        window.location.pathname + window.location.search,
-      );
-
-      setCurrentPage("");
-    });
-
-    socket.on("game-left", () => {
-      console.log("🚪 GAME LEFT - RETURNING HOME");
-
-      setHasJoined(false);
-      setRoomData(null);
-      setReadyData(null);
-      setGameState(null);
 
       window.history.replaceState(
         null,
@@ -170,123 +149,92 @@ function App() {
       );
 
       setCurrentPage("");
-    });
+    };
 
-    socket.on("game-state-update", (data) => {
-      console.log("PHASE:", data.phase);
-      console.log("GAME STATE:", data);
+    const handlePlayerRemoved = (data) => {
+      console.log("PLAYER REMOVED:", data);
 
+      setNotification({
+        type: "warning",
+        message: data?.message || "You have been removed from the game.",
+      });
+
+      returnHome();
+    };
+
+    const handleGameLeft = () => {
+      console.log("GAME LEFT");
+      returnHome();
+    };
+
+    const handleGameStateUpdate = (data) => {
+      console.log("GAME PHASE:", data.phase);
       setGameState(data);
-    });
+    };
 
-    socket.on("player-reported", (data) => {
-      console.log("⚠️ PLAYER REPORTED:", data);
-
+    const handlePlayerReported = (data) => {
       setNotification({
         type: "warning",
         message: data.message,
       });
+    };
 
-      setTimeout(() => {
-        setNotification(null);
-      }, 4000);
-    });
+    socket.on("connect", handleConnect);
+    socket.on("player-count", handlePlayerCount);
+    socket.on("room-update", handleRoomUpdate);
+    socket.on("ready-update", handleReadyUpdate);
+    socket.on("round-reset", handleRoundReset);
+    socket.on("player-removed", handlePlayerRemoved);
+    socket.on("game-left", handleGameLeft);
+    socket.on("game-state-update", handleGameStateUpdate);
+    socket.on("player-reported", handlePlayerReported);
 
     return () => {
-      socket.off("connect");
-      socket.off("player-count");
-      socket.off("room-update");
+      socket.off("connect", handleConnect);
+      socket.off("player-count", handlePlayerCount);
+      socket.off("room-update", handleRoomUpdate);
       socket.off("room-moved");
-      socket.off("ready-update");
-      socket.off("round-reset");
-      socket.off("player-removed");
-      socket.off("game-state-update");
-      socket.off("player-reported");
-      socket.off("game-left");
+      socket.off("ready-update", handleReadyUpdate);
+      socket.off("round-reset", handleRoundReset);
+      socket.off("player-removed", handlePlayerRemoved);
+      socket.off("game-left", handleGameLeft);
+      socket.off("game-state-update", handleGameStateUpdate);
+      socket.off("player-reported", handlePlayerReported);
     };
   }, []);
 
   /* ============================ */
-  /* APP LIFECYCLE */
+  /* APP LIFECYCLE LOGGING */
   /* ============================ */
 
   useEffect(() => {
-    console.log("========== APP LIFECYCLE START ==========");
-    console.log("APP MOUNTED");
-
-    console.log(
-      "Navigation type:",
-      performance.getEntriesByType("navigation")[0]?.type,
-    );
-
     const handleBeforeUnload = () => {
-      console.log("🔥 BEFORE UNLOAD");
+      console.log("Page unloading");
     };
 
     const handlePageHide = () => {
-      console.log("🔥 PAGE HIDE");
+      console.log("Page hidden");
     };
 
     const handleVisibility = () => {
-      console.log(
-        "VISIBILITY:",
-        document.visibilityState,
-      );
-    };
-
-    window.addEventListener(
-      "beforeunload",
-      handleBeforeUnload,
-    );
-
-    window.addEventListener(
-      "pagehide",
-      handlePageHide,
-    );
-
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibility,
-    );
-
-    const handleConnect = () => {
-      console.log(
-        "🔥 SOCKET CONNECTED:",
-        socket.id,
-      );
+      console.log("Visibility:", document.visibilityState);
     };
 
     const handleDisconnect = (reason) => {
-      console.log(
-        "🔥 SOCKET DISCONNECTED:",
-        reason,
-        "socket:",
-        socket.id,
-      );
+      console.log("Socket disconnected:", reason);
     };
 
-    socket.on("connect", handleConnect);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibility);
+
     socket.on("disconnect", handleDisconnect);
 
     return () => {
-      console.log("APP UNMOUNTED");
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibility);
 
-      window.removeEventListener(
-        "beforeunload",
-        handleBeforeUnload,
-      );
-
-      window.removeEventListener(
-        "pagehide",
-        handlePageHide,
-      );
-
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibility,
-      );
-
-      socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
     };
   }, []);
@@ -307,26 +255,32 @@ function App() {
         return <RulesPage />;
 
       case "#/safety":
+      case "/safety":
         return <SafetyPage />;
 
       case "#/community-guidelines":
+      case "/community-guidelines":
         return <CommunityGuidelinesPage />;
 
       case "#/legal":
+      case "/legal":
         return <LegalPage />;
 
       case "#/privacy":
+      case "/privacy":
         return <PrivacyPage />;
 
       case "#/terms":
+      case "/terms":
         return <TermsPage />;
 
       case "#/contact":
+      case "/contact":
         return <ContactPage />;
 
       case "#/omegle-alternative":
       case "/omegle-alternative":
-      return <OmegleAlternativePage />;
+        return <OmegleAlternativePage />;
 
       default:
         return null;
@@ -334,31 +288,46 @@ function App() {
   };
 
   /* ============================ */
-  /* WEBSITE */
+  /* RANDOM CHAT SCREEN */
+  /* ============================ */
+
+  if (randomChatActive && !hasJoined) {
+    return (
+      <RandomChatPage
+        playerName={playerName.trim()}
+        onLeave={handleLeaveRandomChat}
+      />
+    );
+  }
+
+  /* ============================ */
+  /* WEBSITE / LANDING PAGE */
   /* ============================ */
 
   if (!hasJoined) {
     const websitePage = renderWebsitePage();
 
     if (websitePage) {
-      return (
-        <WebsiteLayout>
-          {websitePage}
-        </WebsiteLayout>
-      );
+      return <WebsiteLayout>{websitePage}</WebsiteLayout>;
     }
 
     return (
-      <LandingPage
-        playerName={playerName}
-        setPlayerName={setPlayerName}
-        onStart={handleStart}
-      />
+      <>
+        <LandingPage
+          playerName={playerName}
+          setPlayerName={setPlayerName}
+          onStart={handleStart}
+          onStartGame={handleStart}
+          onEnterRandomChat={handleEnterRandomChat}
+        />
+
+        <Notification notification={notification} />
+      </>
     );
   }
 
   /* ============================ */
-  /* GAME */
+  /* EXISTING TRUTH OR DARE GAME */
   /* ============================ */
 
   return (
