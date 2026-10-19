@@ -234,12 +234,16 @@ function RandomChatPage({ playerName, onLeave }) {
         {/* Compact header */}
         <header className="flex h-12 shrink-0 items-center justify-between border-b border-white/10">
           <button
-            onClick={handleLeave}
-            aria-label="Return to Ooyo home"
-            className="text-xl font-black tracking-tight"
-          >
-            ooyo<span className="text-purple-400">.</span>
-          </button>
+  onClick={handleLeave}
+  aria-label="Return to Ooyo home"
+  className="flex items-center"
+>
+  <img
+    src="/logo.png"
+    alt="ooyo"
+    className="h-8 w-auto object-contain"
+  />
+</button>
 
           <div className="flex items-center gap-2 text-xs text-gray-300">
             <span
